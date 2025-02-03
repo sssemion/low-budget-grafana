@@ -1,4 +1,4 @@
-set(SRCS prometheus.cpp)
+set(SRCS prometheus.h prometheus.cpp)
 
 add_library(prometheus STATIC ${SRCS})
 

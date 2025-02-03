@@ -13,11 +13,10 @@ public:
      *
      * @param base_url Базовый URL Prometheus API (например, "http://localhost:9090")
      */
-    explicit PrometheusClient(const std::string& base_url) : base_url(base_url) {}
+    explicit PrometheusClient(const std::string &base_url);
+    ~PrometheusClient() override = default;
 
-    inline virtual std::vector<Metric> query(const std::string& query_str, Timestamp start, Timestamp end) override {
-        return query(query_str, start, end, 15); // default step = 15
-    };
+    std::vector<Metric> query(const std::string &query_str, Timestamp start, Timestamp end) override;
 
     /**
      * @brief Выполнить запрос к Prometheus для получения данных.
@@ -28,7 +27,7 @@ public:
      * @param step Интервал между точками в секундах, по умолчанию 15
      * @return Массив метрик типа Metric
      */
-    virtual std::vector<Metric> query(const std::string& query_str, Timestamp start, Timestamp end, int step);
+    std::vector<Metric> query(const std::string &query_str, Timestamp start, Timestamp end, int step);
 
     /**
      * @brief Проверить доступность Prometheus.

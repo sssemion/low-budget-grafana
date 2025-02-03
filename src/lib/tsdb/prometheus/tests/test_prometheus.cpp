@@ -37,7 +37,7 @@ TEST_SUITE("Test PrometheusClient") {
     TEST_CASE("Test query") {
         SUBCASE("Валидный запрос") {
             client.mockRequest(
-                "/api/v1/query?query=test&start=" + std::to_string(TEST_START)
+                "/api/v1/query_range?query=test&start=" + std::to_string(TEST_START)
                     + "&end=" + std::to_string(TEST_END)
                     + "&step=" + std::to_string(TEST_STEP),
                 R"({"status":"success","data":{"result":[{"metric":{"__name__":"up"},"value":[1690,"1"]}]}})"
@@ -49,7 +49,7 @@ TEST_SUITE("Test PrometheusClient") {
 
     TEST_CASE("Test isAvailable") {
         SUBCASE("Available") {
-            client.mockRequest("/-/healthy", "200 OK");
+            client.mockRequest("/-/healthy", "Prometheus Server is Healthy.");
             CHECK(client.isAvailable());
         }
 
