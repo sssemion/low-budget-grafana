@@ -39,6 +39,8 @@ public:
 
 protected:
     std::string base_url; // Базовый URL для API Prometheus
+
+    std::vector<Metric> parse_response(const std::string &response);
 };
 
 

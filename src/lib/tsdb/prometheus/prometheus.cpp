@@ -1,5 +1,6 @@
 #include <curl/curl.h>
 #include "prometheus.h"
+#include <nlohmann/json.hpp>
 
 PrometheusClient::PrometheusClient(const std::string& base_url) : base_url(base_url) {}
 
@@ -15,7 +16,7 @@ std::vector<Metric> PrometheusClient::query(const std::string &query_str, Timest
     url += "&end=" + std::to_string(end);
     url += "&step=" + std::to_string(step);
     std::string response = performHttpRequest(url);
-    return std::vector<Metric>{};
+    return parse_response(response);
 }
 
 bool PrometheusClient::isAvailable()
@@ -27,4 +28,40 @@ bool PrometheusClient::isAvailable()
     } catch (...) {
         return false;
     }
+}
+
+std::vector<Metric> PrometheusClient::parse_response(const std::string &response)
+{
+    std::vector<Metric> metrics;
+
+    // Парсим JSON
+    auto parsed_json = nlohmann::json::parse(response);
+
+    // Проверяем статус ответа
+    if (parsed_json["status"] != "success") {
+        throw std::runtime_error("Prometheus request failed");
+    }
+
+    for (const auto& result : parsed_json["data"]["result"]) {
+        Metric metric;
+
+        auto metric_info = result["metric"];
+        for (auto it = metric_info.begin(); it != metric_info.end(); ++it) {
+            if (it.key() == "__name__") {
+                metric.name = it.value();
+            } else {
+                metric.labels[it.key()] = it.value();
+            }
+        }
+
+        for (const auto& value_pair : result["values"]) {
+            Point point;
+            point.timestamp = value_pair[0];
+            point.value = std::stod((std::string)value_pair[1]);
+            metric.values.push_back(point);
+        }
+
+        metrics.push_back(metric);
+    }
+    return metrics;
 }

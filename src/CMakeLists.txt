@@ -30,5 +30,7 @@ if(TEST)
     set(DOCTEST_INCLUDE_DIR ${source_dir}/doctest CACHE INTERNAL "Path to include folder for doctest")
 endif()
 
+add_subdirectory(thirdparty)
+
 add_subdirectory(lib)
 include_directories(lib)
