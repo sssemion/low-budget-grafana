@@ -121,6 +121,14 @@ TEST_SUITE("Test PrometheusClient")
                 std::runtime_error,
                 "Prometheus request failed");
         }
+
+        SUBCASE("Дефолтный step")
+        {
+            client.mockRequest(
+                "/api/v1/query_range?query=test&start=" + std::to_string(TEST_START) + "&end=" + std::to_string(TEST_END) + "&step=15",
+                R"({"status":"success","data":{"result":[{"metric":{"__name__":"up"},"values":[[1690,"1"]]}]}})");
+            std::vector<Metric> result = client.query("test", TEST_START, TEST_END);
+        }
     }
 
     TEST_CASE("Test isAvailable")
