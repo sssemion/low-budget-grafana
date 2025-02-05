@@ -34,10 +34,8 @@ std::vector<Metric> PrometheusClient::parse_response(const std::string &response
 {
     std::vector<Metric> metrics;
 
-    // Парсим JSON
     auto parsed_json = nlohmann::json::parse(response);
 
-    // Проверяем статус ответа
     if (parsed_json["status"] != "success") {
         throw std::runtime_error("Prometheus request failed");
     }
