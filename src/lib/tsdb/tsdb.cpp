@@ -1,5 +1,6 @@
 #include "tsdb.h"
 #include <curl/curl.h>
+#include <stdexcept>
 
 std::string TSDBClient::performHttpRequest(const std::string& url) {
     CURL* curl = curl_easy_init();
