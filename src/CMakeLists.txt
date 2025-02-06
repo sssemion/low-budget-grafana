@@ -6,6 +6,10 @@ project(low-budget-grafana)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "cmake")
 
+if (NOT MSVC)
+    list(APPEND CMAKE_CXX_STANDARD_LIBRARIES "-lstdc++ -lm")
+endif()
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
 option(TEST "TEST" OFF)
