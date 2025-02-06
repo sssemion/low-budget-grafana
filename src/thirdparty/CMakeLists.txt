@@ -1,5 +1,10 @@
 include(FetchContent)
 
+if (WIN32)
+    # Отключаем проверку TLS сертификатов на Windows
+    set(CMAKE_TLS_VERIFY OFF CACHE BOOL "Disable TLS certificate verification" FORCE)
+endif()
+
 FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
 FetchContent_MakeAvailable(json)
 
