@@ -3,13 +3,18 @@ include(FetchContent)
 FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
 FetchContent_MakeAvailable(json)
 
-FetchContent_Declare(curl
+FetchContent_Declare(curl_src
     URL https://curl.se/download/curl-8.5.0.tar.gz
-    DOWNLOAD_EXTRACT_TIMESTAMP true
-    OVERRIDE_FIND_PACKAGE
 )
-FetchContent_MakeAvailable(curl)
-find_package(curl)
+FetchContent_GetProperties(curl_src)
+if (NOT curl_src_POPULATED)
+  FetchContent_Populate(curl_src)
+endif()
+set(HTTP_ONLY ON CACHE BOOL "Disable other protocols" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libs" FORCE)
+set(BUILD_CURL_EXE OFF CACHE BOOL "Do not build curl exe" FORCE)
+set(BUILD_TESTING OFF CACHE BOOL "Disable cURL tests" FORCE)
+add_subdirectory(${curl_src_SOURCE_DIR} ${curl_src_BINARY_DIR})
 
 if(TEST)
     include(ExternalProject)
