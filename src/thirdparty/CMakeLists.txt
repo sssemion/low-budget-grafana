@@ -10,7 +10,6 @@ FetchContent_GetProperties(curl_src)
 if (NOT curl_src_POPULATED)
   FetchContent_Populate(curl_src)
 endif()
-
 set(HTTP_ONLY ON CACHE BOOL "Disable other protocols" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libs" FORCE)
 set(BUILD_CURL_EXE OFF CACHE BOOL "Do not build curl exe" FORCE)
