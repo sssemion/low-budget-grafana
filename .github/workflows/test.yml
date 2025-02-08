@@ -39,7 +39,10 @@ jobs:
           libgl1-mesa-dev \
           libglu1-mesa-dev \
           mesa-utils \
-          xvfb
+          xvfb \
+          wayland-protocols \
+          libwayland-dev
+
 
     - name: Set reusable strings
       id: strings
