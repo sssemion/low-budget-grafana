@@ -9,7 +9,13 @@ target_link_libraries(app
         imgui
         implot
         prometheus
-        "-framework Cocoa"
-        "-framework CoreFoundation"
-        "-framework IOKit"
 )
+
+if(APPLE)
+    target_link_libraries(app
+        PRIVATE
+            "-framework Cocoa"
+            "-framework CoreFoundation"
+            "-framework IOKit"
+    )
+endif()
