@@ -39,7 +39,15 @@ jobs:
           libgl1-mesa-dev \
           libglu1-mesa-dev \
           mesa-utils \
-          xvfb
+          xvfb \
+          ibx11-dev \
+          libxrandr-dev \
+          libxi-dev \
+          libxinerama-dev \
+          libxcursor-dev \
+          libgl1-mesa-dev \
+          libglu1-mesa-dev \
+          mesa-common-dev
 
 
     - name: Set reusable strings
