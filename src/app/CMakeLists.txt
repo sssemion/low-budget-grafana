@@ -10,12 +10,3 @@ target_link_libraries(app
         implot
         prometheus
 )
-
-if(APPLE)
-    target_link_libraries(app
-        PRIVATE
-            "-framework Cocoa"
-            "-framework CoreFoundation"
-            "-framework IOKit"
-    )
-endif()
