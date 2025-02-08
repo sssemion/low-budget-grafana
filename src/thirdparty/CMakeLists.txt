@@ -43,7 +43,17 @@ if(TEST)
 endif()
 
 find_package(OpenGL REQUIRED)
-find_package(glfw3 REQUIRED)
+
+FetchContent_Declare(
+    glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG        3.4
+)
+FetchContent_GetProperties(glfw)
+if(NOT glfw_POPULATED)
+  FetchContent_Populate(glfw)
+  add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR})
+endif()
 
 FetchContent_Declare(
     imgui
