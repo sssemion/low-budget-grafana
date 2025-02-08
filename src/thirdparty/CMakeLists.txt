@@ -51,8 +51,9 @@ FetchContent_Declare(
 )
 FetchContent_GetProperties(glfw)
 if(NOT glfw_POPULATED)
-  FetchContent_Populate(glfw)
-  add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR})
+    set(GLFW_BUILD_DOCS OFF CACHE BOOL "Disable GLFW documentation build" FORCE)
+    FetchContent_Populate(glfw)
+    add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR})
 endif()
 
 FetchContent_Declare(
