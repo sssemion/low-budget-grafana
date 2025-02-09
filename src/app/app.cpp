@@ -64,8 +64,10 @@ void renderMetricsViewer()
 {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(1280 - 400, 720), ImGuiCond_Always);
-    ImGui::Begin("Metrics Viewer", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-    if (ImPlot::BeginPlot("Time Series"))
+    ImGui::Begin("Metrics Viewer", nullptr, ImGuiWindowFlags_NoDecoration);
+
+    ImVec2 plotSize = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - 20);
+    if (ImPlot::BeginPlot("Time Series", plotSize))
     {
         ImPlot::SetupAxes("Time", "Value");
 
@@ -99,65 +101,81 @@ void renderSettings()
     ImGui::SetNextWindowSize(ImVec2(400, 720), ImGuiCond_Always);
     ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
-    ImGui::Text("Prometheus Base URL:");
-    static char urlBuffer[128] = "http://localhost:9090";
-    ImGui::InputText("##BaseURL", urlBuffer, IM_ARRAYSIZE(urlBuffer));
-
-    if (ImGui::Button("Connect"))
+    if (ImGui::TreeNode("Range Widgets"))
     {
-        prometheusClient = std::make_unique<PrometheusClient>(urlBuffer);
-        if (prometheusClient->isAvailable())
+        ImGui::Text("Prometheus Base URL:");
+        static char urlBuffer[128] = "http://localhost:9090";
+        ImGui::InputText("##BaseURL", urlBuffer, IM_ARRAYSIZE(urlBuffer));
+
+        if (ImGui::Button("Connect"))
         {
-            connectionMessage = "Connection successful!";
+            prometheusClient = std::make_unique<PrometheusClient>(urlBuffer);
+            if (prometheusClient->isAvailable())
+            {
+                connectionMessage = "Connection successful!";
+            }
+            else
+            {
+                connectionMessage = "Failed to connect to Prometheus.";
+            }
+            showConnectionMessage = true;
         }
-        else
+
+        if (showConnectionMessage)
         {
-            connectionMessage = "Failed to connect to Prometheus.";
+            ImGui::TextWrapped(connectionMessage.c_str());
         }
-        showConnectionMessage = true;
-    }
-
-    if (showConnectionMessage)
-    {
-        ImGui::TextWrapped(connectionMessage.c_str());
+        ImGui::TreePop();
     }
 
     ImGui::Separator();
-    ImGui::Text("PromQL Query:");
-    static char queryBuffer[128] = "up";
-    if (ImGui::InputText("##QueryStr", queryBuffer, IM_ARRAYSIZE(queryBuffer)))
+    if (ImGui::TreeNode("Query"))
     {
-        queryStr = queryBuffer;
-    }
+        ImGui::Text("PromQL Query:");
+        static char queryBuffer[128] = "up";
+        if (ImGui::InputText("##QueryStr", queryBuffer, IM_ARRAYSIZE(queryBuffer)))
+        {
+            queryStr = queryBuffer;
+        }
 
-    if (ImGui::Button("Fetch Data"))
-    {
-        fetchData();
-    }
-
-    ImGui::Separator();
-    ImGui::Text("Plot Type:");
-    if (ImGui::RadioButton("Line", currentPlotType == PlotType::Line))
-    {
-        currentPlotType = PlotType::Line;
-    }
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Scatter", currentPlotType == PlotType::Scatter))
-    {
-        currentPlotType = PlotType::Scatter;
-    }
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Bar", currentPlotType == PlotType::Bar))
-    {
-        currentPlotType = PlotType::Bar;
+        if (ImGui::Button("Fetch Data"))
+        {
+            fetchData();
+        }
+        ImGui::TreePop();
     }
 
     ImGui::Separator();
-    ImGui::Checkbox("Auto Refresh", &autoRefresh);
-    ImGui::SameLine();
-    ImGui::PushItemWidth(80);
-    ImGui::InputFloat("sec", &refreshIntervalSec, 1.0f, 5.0f, "%.1f");
-    ImGui::PopItemWidth();
+    if (ImGui::TreeNode("Plot settings"))
+    {
+        ImGui::Text("Plot Type:");
+        if (ImGui::RadioButton("Line", currentPlotType == PlotType::Line))
+        {
+            currentPlotType = PlotType::Line;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Scatter", currentPlotType == PlotType::Scatter))
+        {
+            currentPlotType = PlotType::Scatter;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Bar", currentPlotType == PlotType::Bar))
+        {
+            currentPlotType = PlotType::Bar;
+        }
+        ImGui::TreePop();
+    }
+
+    ImGui::Separator();
+    if (ImGui::TreeNode("Time intervals"))
+    {
+        ImGui::Checkbox("Auto Refresh", &autoRefresh);
+        ImGui::SameLine();
+        ImGui::PushItemWidth(80);
+        ImGui::InputFloat("sec", &refreshIntervalSec, 1.0f, 5.0f, "%.1f");
+        ImGui::PopItemWidth();
+        ImGui::TreePop();
+    }
 
     ImGui::End();
 }
