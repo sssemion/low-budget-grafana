@@ -6,8 +6,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "implot.h"
-
 #include "../lib/tsdb/prometheus/prometheus.h"
+#include "constants.h"
 
 struct GraphSeries
 {
@@ -17,21 +17,14 @@ struct GraphSeries
 };
 
 static bool autoRefresh = false;
-static float refreshIntervalSec = 5.0f;
-static float lastRefreshTime = 0.0f;
-static std::string queryStr = "up";
+static double lastRefreshTime = 0.0;
+static float refreshIntervalSec = DEFAULT_REFRESH_INTERVAL;
+static std::string queryStr = DEFAULT_QUERY;
 static std::unique_ptr<PrometheusClient> prometheusClient = nullptr;
 static std::string connectionMessage;
 static bool showConnectionMessage = false;
 
-enum class PlotType
-{
-    Line,
-    Scatter,
-    Bar
-};
 static PlotType currentPlotType = PlotType::Line;
-
 static std::vector<GraphSeries> seriesData;
 
 void fetchData()
@@ -40,7 +33,7 @@ void fetchData()
         return;
 
     Timestamp now = std::time(nullptr);
-    Timestamp start = now - 60 * 60;
+    Timestamp start = now - DEFAULT_FETCH_RANGE;
     Timestamp end = now;
 
     std::vector<Metric> metrics = prometheusClient->query(queryStr, start, end);
@@ -63,7 +56,7 @@ void fetchData()
 void renderMetricsViewer()
 {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(1280 - 400, 720), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(WINDOW_WIDTH - SETTINGS_WIDTH, WINDOW_HEIGHT), ImGuiCond_Always);
     ImGui::Begin("Metrics Viewer", nullptr, ImGuiWindowFlags_NoDecoration);
 
     ImVec2 plotSize = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - 20);
@@ -97,26 +90,27 @@ void renderMetricsViewer()
 
 void renderSettings()
 {
-    ImGui::SetNextWindowPos(ImVec2(1280 - 400, 0), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(400, 720), ImGuiCond_Always);
-    ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+    ImGui::SetNextWindowPos(ImVec2(WINDOW_WIDTH - SETTINGS_WIDTH, 0), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(SETTINGS_WIDTH, WINDOW_HEIGHT), ImGuiCond_Always);
+    ImGui::Begin(Strings::WINDOW_SETTINGS, nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
-    if (ImGui::TreeNode("Range Widgets"))
+    if (ImGui::TreeNode(Strings::NODE_CONNECTION))
     {
-        ImGui::Text("Prometheus Base URL:");
-        static char urlBuffer[128] = "http://localhost:9090";
+        ImGui::Text(Strings::LABEL_PROMETHEUS_URL);
+        static char urlBuffer[128];
+        std::strncpy(urlBuffer, DEFAULT_PROMETHEUS_URL, sizeof(urlBuffer) - 1);
         ImGui::InputText("##BaseURL", urlBuffer, IM_ARRAYSIZE(urlBuffer));
 
-        if (ImGui::Button("Connect"))
+        if (ImGui::Button(Strings::NODE_CONNECTION))
         {
             prometheusClient = std::make_unique<PrometheusClient>(urlBuffer);
             if (prometheusClient->isAvailable())
             {
-                connectionMessage = "Connection successful!";
+                connectionMessage = Strings::MESSAGE_CONNECTION_SUCCESS;
             }
             else
             {
-                connectionMessage = "Failed to connect to Prometheus.";
+                connectionMessage = Strings::MESSAGE_CONNECTION_FAILED;
             }
             showConnectionMessage = true;
         }
@@ -129,16 +123,17 @@ void renderSettings()
     }
 
     ImGui::Separator();
-    if (ImGui::TreeNode("Query"))
+    if (ImGui::TreeNode(Strings::NODE_QUERY))
     {
-        ImGui::Text("PromQL Query:");
-        static char queryBuffer[128] = "up";
+        ImGui::Text(Strings::LABEL_QUERY);
+        static char queryBuffer[128];
+        std::strncpy(queryBuffer, DEFAULT_QUERY, sizeof(queryBuffer) - 1);
         if (ImGui::InputText("##QueryStr", queryBuffer, IM_ARRAYSIZE(queryBuffer)))
         {
             queryStr = queryBuffer;
         }
 
-        if (ImGui::Button("Fetch Data"))
+        if (ImGui::Button(Strings::BUTTON_FETCH_DATA))
         {
             fetchData();
         }
@@ -146,20 +141,20 @@ void renderSettings()
     }
 
     ImGui::Separator();
-    if (ImGui::TreeNode("Plot settings"))
+    if (ImGui::TreeNode(Strings::NODE_PLOT_SETTINGS))
     {
-        ImGui::Text("Plot Type:");
-        if (ImGui::RadioButton("Line", currentPlotType == PlotType::Line))
+        ImGui::Text(Strings::LABEL_PLOT_TYPE);
+        if (ImGui::RadioButton(Strings::RADIO_BUTTON_LINE, currentPlotType == PlotType::Line))
         {
             currentPlotType = PlotType::Line;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Scatter", currentPlotType == PlotType::Scatter))
+        if (ImGui::RadioButton(Strings::RADIO_BUTTON_SCATTER, currentPlotType == PlotType::Scatter))
         {
             currentPlotType = PlotType::Scatter;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Bar", currentPlotType == PlotType::Bar))
+        if (ImGui::RadioButton(Strings::RADIO_BUTTON_BAR, currentPlotType == PlotType::Bar))
         {
             currentPlotType = PlotType::Bar;
         }
@@ -167,7 +162,7 @@ void renderSettings()
     }
 
     ImGui::Separator();
-    if (ImGui::TreeNode("Time intervals"))
+    if (ImGui::TreeNode(Strings::NODE_TIME_INTERVALS))
     {
         ImGui::Checkbox("Auto Refresh", &autoRefresh);
         ImGui::SameLine();
@@ -195,7 +190,7 @@ int main(int, char **)
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 
-    GLFWwindow *window = glfwCreateWindow(1280, 720, "Low budget grafana", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, Strings::WINDOW_TITLE, nullptr, nullptr);
     if (!window)
     {
         glfwTerminate();
@@ -213,7 +208,7 @@ int main(int, char **)
     io.FontGlobalScale = 1.2;
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 410");
+    ImGui_ImplOpenGL3_Init(GLSL_VERSION);
 
     while (!glfwWindowShouldClose(window))
     {

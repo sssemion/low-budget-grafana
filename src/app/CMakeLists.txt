@@ -1,6 +1,6 @@
 find_package(OpenGL REQUIRED)
 
-add_executable(app app.cpp)
+add_executable(app app.cpp constants.h)
 
 target_link_libraries(app
     PRIVATE
