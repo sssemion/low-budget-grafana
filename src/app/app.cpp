@@ -1,11 +1,16 @@
-#include <vector>
+#define GL_SILENCE_DEPRECATION
+
+#include <cstring>
 #include <ctime>
 #include <memory>
+#include <vector>
+
 #include <GLFW/glfw3.h>
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "implot.h"
+
 #include "../lib/tsdb/prometheus/prometheus.h"
 #include "constants.h"
 
@@ -98,7 +103,7 @@ void renderSettings()
     {
         ImGui::Text(Strings::LABEL_PROMETHEUS_URL);
         static char urlBuffer[128];
-        std::strncpy(urlBuffer, DEFAULT_PROMETHEUS_URL, sizeof(urlBuffer) - 1);
+        strncpy(urlBuffer, DEFAULT_PROMETHEUS_URL, sizeof(urlBuffer) - 1);
         ImGui::InputText("##BaseURL", urlBuffer, IM_ARRAYSIZE(urlBuffer));
 
         if (ImGui::Button(Strings::NODE_CONNECTION))
@@ -117,7 +122,7 @@ void renderSettings()
 
         if (showConnectionMessage)
         {
-            ImGui::TextWrapped(connectionMessage.c_str());
+            ImGui::TextWrapped("%s", connectionMessage.c_str());
         }
         ImGui::TreePop();
     }
@@ -127,7 +132,7 @@ void renderSettings()
     {
         ImGui::Text(Strings::LABEL_QUERY);
         static char queryBuffer[128];
-        std::strncpy(queryBuffer, DEFAULT_QUERY, sizeof(queryBuffer) - 1);
+        strncpy(queryBuffer, DEFAULT_QUERY, sizeof(queryBuffer) - 1);
         if (ImGui::InputText("##QueryStr", queryBuffer, IM_ARRAYSIZE(queryBuffer)))
         {
             queryStr = queryBuffer;
