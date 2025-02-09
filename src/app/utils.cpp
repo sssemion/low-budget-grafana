@@ -1,6 +1,7 @@
 
 #include <iomanip>
 #include <chrono>
+#include <cstring>
 #include <ctime>
 #include <sstream>
 
