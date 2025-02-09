@@ -24,7 +24,7 @@ bool PrometheusClient::isAvailable()
     try {
         std::string url = base_url + "/-/healthy";
         std::string response = performHttpRequest(url);
-        return response == "Prometheus Server is Healthy.";
+        return response == "Prometheus Server is Healthy.\n";
     } catch (...) {
         return false;
     }

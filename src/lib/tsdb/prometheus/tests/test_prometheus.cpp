@@ -135,7 +135,7 @@ TEST_SUITE("Test PrometheusClient")
     {
         SUBCASE("Available")
         {
-            client.mockRequest("/-/healthy", "Prometheus Server is Healthy.");
+            client.mockRequest("/-/healthy", "Prometheus Server is Healthy.\n");
             CHECK(client.isAvailable());
         }
 

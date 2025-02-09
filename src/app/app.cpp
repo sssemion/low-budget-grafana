@@ -1,6 +1,6 @@
 #include <vector>
 #include <ctime>
-
+#include <memory>
 #include <GLFW/glfw3.h>
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -16,12 +16,13 @@ struct GraphSeries
     std::vector<double> y;
 };
 
-static bool showDemoWindow = false;
 static bool autoRefresh = false;
 static float refreshIntervalSec = 5.0f;
 static float lastRefreshTime = 0.0f;
 static std::string queryStr = "up";
-static PrometheusClient *prometheusClient = nullptr;
+static std::unique_ptr<PrometheusClient> prometheusClient = nullptr;
+static std::string connectionMessage;
+static bool showConnectionMessage = false;
 
 enum class PlotType
 {
@@ -59,43 +60,66 @@ void fetchData()
     }
 }
 
-void renderUI()
+void renderMetricsViewer()
 {
-    // Можно сделать главное меню
-    if (ImGui::BeginMainMenuBar())
+    ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(1280 - 400, 720), ImGuiCond_Always);
+    ImGui::Begin("Metrics Viewer", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+    if (ImPlot::BeginPlot("Time Series"))
     {
-        if (ImGui::BeginMenu("File"))
-        {
-            if (ImGui::MenuItem("Exit"))
-            {
-                // TODO: Proper exit
-            }
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Help"))
-        {
-            ImGui::MenuItem("ImGui Demo", NULL, &showDemoWindow);
-            ImGui::EndMenu();
-        }
-        ImGui::EndMainMenuBar();
-    }
+        ImPlot::SetupAxes("Time", "Value");
 
-    // Окно с настройками
-    ImGui::Begin("Settings");
+        for (auto &s : seriesData)
+        {
+            if (s.x.empty())
+                continue;
+            if (currentPlotType == PlotType::Line)
+            {
+                ImPlot::PlotLine(s.name.c_str(), s.x.data(), s.y.data(), s.x.size());
+            }
+            else if (currentPlotType == PlotType::Scatter)
+            {
+                ImPlot::PlotScatter(s.name.c_str(), s.x.data(), s.y.data(), s.x.size());
+            }
+            else if (currentPlotType == PlotType::Bar)
+            {
+                double barWidth = 0.5;
+                ImPlot::PlotBars(s.name.c_str(), s.x.data(), s.y.data(), s.x.size(), barWidth);
+            }
+        }
+
+        ImPlot::EndPlot();
+    }
+    ImGui::End();
+}
+
+void renderSettings()
+{
+    ImGui::SetNextWindowPos(ImVec2(1280 - 400, 0), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(400, 720), ImGuiCond_Always);
+    ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
     ImGui::Text("Prometheus Base URL:");
     static char urlBuffer[128] = "http://localhost:9090";
     ImGui::InputText("##BaseURL", urlBuffer, IM_ARRAYSIZE(urlBuffer));
 
-    // При нажатии кнопки создаём или переинициализируем клиента
     if (ImGui::Button("Connect"))
     {
-        if (prometheusClient)
+        prometheusClient = std::make_unique<PrometheusClient>(urlBuffer);
+        if (prometheusClient->isAvailable())
         {
-            delete prometheusClient;
-            prometheusClient = nullptr;
+            connectionMessage = "Connection successful!";
         }
-        prometheusClient = new PrometheusClient(urlBuffer);
+        else
+        {
+            connectionMessage = "Failed to connect to Prometheus.";
+        }
+        showConnectionMessage = true;
+    }
+
+    if (showConnectionMessage)
+    {
+        ImGui::TextWrapped(connectionMessage.c_str());
     }
 
     ImGui::Separator();
@@ -136,46 +160,12 @@ void renderUI()
     ImGui::PopItemWidth();
 
     ImGui::End();
+}
 
-    // Окно с графиком
-    ImGui::Begin("Metrics Viewer");
-    if (ImPlot::BeginPlot("Time Series"))
-    {
-        // Для примера ось X как время
-        ImPlot::SetupAxes("Time", "Value");
-
-        // Для каждой серии рисуем
-        for (auto &s : seriesData)
-        {
-            if (s.x.empty())
-                continue;
-            if (currentPlotType == PlotType::Line)
-            {
-                ImPlot::PlotLine(s.name.c_str(), s.x.data(), s.y.data(), s.x.size());
-            }
-            else if (currentPlotType == PlotType::Scatter)
-            {
-                ImPlot::PlotScatter(s.name.c_str(), s.x.data(), s.y.data(), s.x.size());
-            }
-            else if (currentPlotType == PlotType::Bar)
-            {
-                // У ImPlot есть PlotBars, но она требует дополнительного параметра
-                // ширины (width). Пусть будет 0.5
-                double barWidth = 0.5;
-                ImPlot::PlotBars(s.name.c_str(), s.x.data(), s.y.data(), s.x.size(), barWidth);
-            }
-        }
-
-        ImPlot::EndPlot();
-    }
-    ImGui::End();
-
-    // Дополнительно можем вывести окно демо ImGui/ImPlot
-    if (showDemoWindow)
-    {
-        ImGui::ShowDemoWindow(&showDemoWindow);
-        ImPlot::ShowDemoWindow(&showDemoWindow);
-    }
+void renderUI()
+{
+    renderMetricsViewer();
+    renderSettings();
 }
 
 int main(int, char **)
@@ -185,15 +175,24 @@ int main(int, char **)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 
     GLFWwindow *window = glfwCreateWindow(1280, 720, "Low budget grafana", nullptr, nullptr);
+    if (!window)
+    {
+        glfwTerminate();
+        return -1;
+    }
+
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // vsync
+    glfwSwapInterval(1);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImPlot::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
+    io.Fonts->AddFontDefault();
+    io.FontGlobalScale = 1.2;
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 410");
@@ -208,17 +207,13 @@ int main(int, char **)
         renderUI();
 
         ImGui::Render();
-        // glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-        // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        // glClear(GL_COLOR_BUFFER_BIT);
-
+        glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
     }
 
-    if (prometheusClient)
-        delete prometheusClient;
+    prometheusClient.reset();
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
     ImGui_ImplOpenGL3_Shutdown();
