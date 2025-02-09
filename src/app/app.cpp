@@ -70,11 +70,15 @@ void renderMetricsViewer()
     ImVec2 plotSize = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
     if (ImPlot::BeginPlot("Time Series", plotSize, ImPlotFlags_NoTitle))
     {
-        double now = static_cast<double>(std::time(nullptr));
-        ImPlot::SetupAxisLimits(ImAxis_X1, now - DEFAULT_PLOT_TIME_RANGE, now);
+        ImPlot::SetupAxisLimits(ImAxis_X1, leftTimeBound, rightTimeBound);
         ImPlot::SetupAxes("Time", "Value");
         ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, HUGE_VAL);
         ImPlot::SetupAxisFormat(ImAxis_X1, timeTickFormatter, nullptr);
+
+        // Убираем major-тики
+        // double tickPositions[] = {};
+        // const char *tickLabels[] = {};
+        // ImPlot::SetupAxisTicks(ImAxis_X1, tickPositions, 0, tickLabels, false);
 
         // Обновляем границы времени при изменении масштаба в графике
         ImPlotRange range = ImPlot::GetPlotLimits().X;
@@ -183,19 +187,10 @@ void renderSettings()
     ImGui::Separator();
     if (ImGui::TreeNode(Strings::NODE_TIME_INTERVALS))
     {
-        ImGui::Text("Set Time Interval:");
-        if (ImGui::InputDouble("Start Time", &leftTimeBound, 60.0, 3600.0, "%.0f"))
-        {
-            ImPlot::SetupAxisLimits(ImAxis_X1, leftTimeBound, rightTimeBound);
-        }
-        if (ImGui::InputDouble("End Time", &rightTimeBound, 60.0, 3600.0, "%.0f"))
-        {
-            ImPlot::SetupAxisLimits(ImAxis_X1, leftTimeBound, rightTimeBound);
-        }
+        ImGui::Text("Left bound: %s", formatTimestamp(leftTimeBound).c_str());
+        ImGui::Text("Right bound: %s", formatTimestamp(rightTimeBound).c_str());
 
-        if (leftTimeBound < 0.0) leftTimeBound = 0.0;
-        if (rightTimeBound < leftTimeBound) rightTimeBound = leftTimeBound + 60.0;
-
+        ImGui::Separator();
         ImGui::Checkbox("Auto Refresh", &autoRefresh);
         ImGui::SameLine();
         ImGui::PushItemWidth(80);

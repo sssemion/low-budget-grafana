@@ -39,3 +39,15 @@ int timeTickFormatter(double value, char *buff, int size, void *user_data)
 
     return static_cast<int>(std::strlen(buff));
 }
+
+std::string formatTimestamp(std::time_t timestamp)
+{
+    std::tm* tm = std::localtime(&timestamp);
+    if (!tm) {
+        return "";
+    }
+
+    std::ostringstream oss;
+    oss << std::put_time(tm, "%c");
+    return oss.str();
+}
