@@ -2,7 +2,21 @@
 #include <curl/curl.h>
 #include <stdexcept>
 
-std::string TSDBClient::performHttpRequest(const std::string& url) {
+std::string TSDBClient::format_line_name(const std::string &name, const std::map<std::string, std::string> &labels)
+{
+    std::string res = name;
+    if (labels.empty())
+        return res;
+    res += '[';
+    for (auto it = labels.begin(); it != labels.end(); it++) {
+        res += it->first + '=' + it->second + ';';
+    }
+    res[res.length() - 1] = ']';
+    return res;
+}
+
+std::string TSDBClient::performHttpRequest(const std::string &url)
+{
     CURL* curl = curl_easy_init();
     if (!curl) {
         throw std::runtime_error("Failed to initialize CURL");

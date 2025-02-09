@@ -48,7 +48,7 @@ void fetchData()
     for (auto &m : metrics)
     {
         GraphSeries s;
-        s.name = m.name;
+        s.name = prometheusClient->format_line_name(m);
         for (auto &p : m.values)
         {
             s.x.push_back(static_cast<double>(p.timestamp));
