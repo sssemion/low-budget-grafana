@@ -27,6 +27,8 @@ static double lastRefreshTime = 0.0;
 static float refreshIntervalSec = DEFAULT_REFRESH_INTERVAL;
 static std::string queryStr = DEFAULT_QUERY;
 static std::unique_ptr<PrometheusClient> prometheusClient = nullptr;
+static double leftTimeBound = static_cast<double>(std::time(nullptr)) - DEFAULT_PLOT_TIME_RANGE;
+static double rightTimeBound = static_cast<double>(std::time(nullptr));
 static std::string connectionMessage;
 static bool showConnectionMessage = false;
 
@@ -73,6 +75,11 @@ void renderMetricsViewer()
         ImPlot::SetupAxes("Time", "Value");
         ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, HUGE_VAL);
         ImPlot::SetupAxisFormat(ImAxis_X1, timeTickFormatter, nullptr);
+
+        // Обновляем границы времени при изменении масштаба в графике
+        ImPlotRange range = ImPlot::GetPlotLimits().X;
+        leftTimeBound = range.Min;
+        rightTimeBound = range.Max;
 
         for (auto &s : seriesData)
         {
@@ -176,12 +183,15 @@ void renderSettings()
     ImGui::Separator();
     if (ImGui::TreeNode(Strings::NODE_TIME_INTERVALS))
     {
-        static double leftTimeBound = static_cast<double>(std::time(nullptr)) - DEFAULT_PLOT_TIME_RANGE;
-        static double rightTimeBound = static_cast<double>(std::time(nullptr));
-
         ImGui::Text("Set Time Interval:");
-        ImGui::InputDouble("Start Time", &leftTimeBound, 60.0, 3600.0, "%.0f");
-        ImGui::InputDouble("End Time", &rightTimeBound, 60.0, 3600.0, "%.0f");
+        if (ImGui::InputDouble("Start Time", &leftTimeBound, 60.0, 3600.0, "%.0f"))
+        {
+            ImPlot::SetupAxisLimits(ImAxis_X1, leftTimeBound, rightTimeBound);
+        }
+        if (ImGui::InputDouble("End Time", &rightTimeBound, 60.0, 3600.0, "%.0f"))
+        {
+            ImPlot::SetupAxisLimits(ImAxis_X1, leftTimeBound, rightTimeBound);
+        }
 
         if (leftTimeBound < 0.0) leftTimeBound = 0.0;
         if (rightTimeBound < leftTimeBound) rightTimeBound = leftTimeBound + 60.0;
