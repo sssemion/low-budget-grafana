@@ -1,9 +1,12 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "doctest.h"
-#include "../prometheus.h"
+
+#include <ctime>
 #include <stdexcept>
 
-const Timestamp TEST_START = 1732448700, TEST_END = 1732449600;
+#include "doctest.h"
+#include "../prometheus.h"
+
+const std::time_t TEST_START = 1732448700, TEST_END = 1732449600;
 const int TEST_STEP = 15;
 const std::string TEST_MULTUPLE_METRICS = R"(
 {

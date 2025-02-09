@@ -1,6 +1,8 @@
 #ifndef TSDB_PROMETHEUS_H
 #define TSDB_PROMETHEUS_H
 
+#include <ctime>
+
 #include "../tsdb.h"
 
 /**
@@ -16,7 +18,7 @@ public:
     explicit PrometheusClient(const std::string &base_url);
     ~PrometheusClient() override = default;
 
-    std::vector<Metric> query(const std::string &query_str, Timestamp start, Timestamp end) override;
+    std::vector<Metric> query(const std::string &query_str, std::time_t start, std::time_t end) override;
 
     /**
      * @brief Выполнить запрос к Prometheus для получения данных.
@@ -27,7 +29,7 @@ public:
      * @param step Интервал между точками в секундах, по умолчанию 15
      * @return Массив метрик типа Metric
      */
-    std::vector<Metric> query(const std::string &query_str, Timestamp start, Timestamp end, int step);
+    std::vector<Metric> query(const std::string &query_str, std::time_t start, std::time_t end, int step);
 
     /**
      * @brief Проверить доступность Prometheus.

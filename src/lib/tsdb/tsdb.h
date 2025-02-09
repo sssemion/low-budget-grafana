@@ -1,11 +1,10 @@
 #ifndef TSDB_ABC_H
 #define TSDB_ABC_H
 
+#include <ctime>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-
-using Timestamp = unsigned long long;
 
 /**
  * @brief Описывает одну точку данных временного ряда.
@@ -15,7 +14,7 @@ using Timestamp = unsigned long long;
 struct Point
 {
     double value;
-    Timestamp timestamp;
+    std::time_t timestamp;
 };
 
 /**
@@ -46,7 +45,7 @@ public:
      * @param end Конец временного диапазона
      * @return Массив метрик типа Metric
      */
-    virtual std::vector<Metric> query(const std::string &query_str, Timestamp start, Timestamp end) = 0;
+    virtual std::vector<Metric> query(const std::string &query_str, std::time_t start, std::time_t end) = 0;
 
     /**
      * @brief Проверить доступность TSDB.

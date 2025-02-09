@@ -1,15 +1,16 @@
+#include <ctime>
 #include <curl/curl.h>
 #include "prometheus.h"
 #include <nlohmann/json.hpp>
 
 PrometheusClient::PrometheusClient(const std::string& base_url) : base_url(base_url) {}
 
-std::vector<Metric> PrometheusClient::query(const std::string &query_str, Timestamp start, Timestamp end)
+std::vector<Metric> PrometheusClient::query(const std::string &query_str, std::time_t start, std::time_t end)
 {
     return query(query_str, start, end, 15); // default step = 15
 }
 
-std::vector<Metric> PrometheusClient::query(const std::string &query_str, Timestamp start, Timestamp end, int step)
+std::vector<Metric> PrometheusClient::query(const std::string &query_str, std::time_t start, std::time_t end, int step)
 {
     std::string url = base_url + "/api/v1/query_range" + "?query=" + curl_escape(query_str.c_str(), query_str.length());
     url += "&start=" + std::to_string(start);

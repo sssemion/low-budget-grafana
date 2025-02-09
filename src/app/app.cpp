@@ -13,6 +13,7 @@
 
 #include "../lib/tsdb/prometheus/prometheus.h"
 #include "constants.h"
+#include "utils.h"
 
 struct GraphSeries
 {
@@ -37,9 +38,9 @@ void fetchData()
     if (!prometheusClient)
         return;
 
-    Timestamp now = std::time(nullptr);
-    Timestamp start = now - DEFAULT_FETCH_RANGE;
-    Timestamp end = now;
+    std::time_t now = std::time(nullptr);
+    std::time_t start = now - DEFAULT_FETCH_RANGE;
+    std::time_t end = now;
 
     std::vector<Metric> metrics = prometheusClient->query(queryStr, start, end);
 
@@ -64,10 +65,11 @@ void renderMetricsViewer()
     ImGui::SetNextWindowSize(ImVec2(WINDOW_WIDTH - SETTINGS_WIDTH, WINDOW_HEIGHT), ImGuiCond_Always);
     ImGui::Begin("Metrics Viewer", nullptr, ImGuiWindowFlags_NoDecoration);
 
-    ImVec2 plotSize = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - 20);
-    if (ImPlot::BeginPlot("Time Series", plotSize))
+    ImVec2 plotSize = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
+    if (ImPlot::BeginPlot("Time Series", plotSize, ImPlotFlags_NoTitle))
     {
         ImPlot::SetupAxes("Time", "Value");
+        ImPlot::SetupAxisFormat(ImAxis_X1, timeTickFormatter, nullptr);
 
         for (auto &s : seriesData)
         {
