@@ -12,8 +12,9 @@ constexpr const char *GLSL_VERSION = "#version 410";
 // Параметры по умолчанию
 constexpr const char *DEFAULT_PROMETHEUS_URL = "http://84.201.168.241:9090";
 constexpr const char *DEFAULT_QUERY = "test_metric";
-constexpr int DEFAULT_FETCH_RANGE = 3600;      // Диапазон запроса данных в секундах (1с)
-constexpr float DEFAULT_REFRESH_INTERVAL = 60; // Интервал автообновления (1м)
+constexpr int DEFAULT_FETCH_RANGE = 3600;         // Диапазон запроса данных в секундах (1ч)
+constexpr float DEFAULT_REFRESH_INTERVAL = 60;    // Интервал автообновления (1м)
+constexpr int DEFAULT_PLOT_TIME_RANGE = 2 * 3600; // Дефолтное окно просмотра (2ч)
 
 namespace Strings
 {

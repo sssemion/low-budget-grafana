@@ -68,7 +68,10 @@ void renderMetricsViewer()
     ImVec2 plotSize = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
     if (ImPlot::BeginPlot("Time Series", plotSize, ImPlotFlags_NoTitle))
     {
+        double now = static_cast<double>(std::time(nullptr));
+        ImPlot::SetupAxisLimits(ImAxis_X1, now - DEFAULT_PLOT_TIME_RANGE, now);
         ImPlot::SetupAxes("Time", "Value");
+        ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, HUGE_VAL);
         ImPlot::SetupAxisFormat(ImAxis_X1, timeTickFormatter, nullptr);
 
         for (auto &s : seriesData)
@@ -106,9 +109,10 @@ void renderSettings()
         ImGui::Text(Strings::LABEL_PROMETHEUS_URL);
         static char urlBuffer[128];
         strncpy(urlBuffer, DEFAULT_PROMETHEUS_URL, sizeof(urlBuffer) - 1);
+        urlBuffer[sizeof(urlBuffer) - 1] = '\0';
         ImGui::InputText("##BaseURL", urlBuffer, IM_ARRAYSIZE(urlBuffer));
 
-        if (ImGui::Button(Strings::NODE_CONNECTION))
+        if (ImGui::Button(Strings::BUTTON_CONNECT))
         {
             prometheusClient = std::make_unique<PrometheusClient>(urlBuffer);
             if (prometheusClient->isAvailable())
@@ -135,6 +139,7 @@ void renderSettings()
         ImGui::Text(Strings::LABEL_QUERY);
         static char queryBuffer[128];
         strncpy(queryBuffer, DEFAULT_QUERY, sizeof(queryBuffer) - 1);
+        queryBuffer[sizeof(queryBuffer) - 1] = '\0';
         if (ImGui::InputText("##QueryStr", queryBuffer, IM_ARRAYSIZE(queryBuffer)))
         {
             queryStr = queryBuffer;
@@ -171,6 +176,16 @@ void renderSettings()
     ImGui::Separator();
     if (ImGui::TreeNode(Strings::NODE_TIME_INTERVALS))
     {
+        static double leftTimeBound = static_cast<double>(std::time(nullptr)) - DEFAULT_PLOT_TIME_RANGE;
+        static double rightTimeBound = static_cast<double>(std::time(nullptr));
+
+        ImGui::Text("Set Time Interval:");
+        ImGui::InputDouble("Start Time", &leftTimeBound, 60.0, 3600.0, "%.0f");
+        ImGui::InputDouble("End Time", &rightTimeBound, 60.0, 3600.0, "%.0f");
+
+        if (leftTimeBound < 0.0) leftTimeBound = 0.0;
+        if (rightTimeBound < leftTimeBound) rightTimeBound = leftTimeBound + 60.0;
+
         ImGui::Checkbox("Auto Refresh", &autoRefresh);
         ImGui::SameLine();
         ImGui::PushItemWidth(80);
