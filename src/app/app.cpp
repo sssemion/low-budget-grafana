@@ -75,11 +75,6 @@ void renderMetricsViewer()
         ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, HUGE_VAL);
         ImPlot::SetupAxisFormat(ImAxis_X1, timeTickFormatter, nullptr);
 
-        // Убираем major-тики
-        // double tickPositions[] = {};
-        // const char *tickLabels[] = {};
-        // ImPlot::SetupAxisTicks(ImAxis_X1, tickPositions, 0, tickLabels, false);
-
         // Обновляем границы времени при изменении масштаба в графике
         ImPlotRange range = ImPlot::GetPlotLimits().X;
         leftTimeBound = range.Min;
