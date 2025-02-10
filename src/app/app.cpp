@@ -1,5 +1,6 @@
 #define GL_SILENCE_DEPRECATION
 
+#include <cmath>
 #include <cstring>
 #include <ctime>
 #include <memory>
