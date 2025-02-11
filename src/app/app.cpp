@@ -34,6 +34,7 @@ static double leftTimeBound = static_cast<double>(std::time(nullptr)) - DEFAULT_
 static double rightTimeBound = static_cast<double>(std::time(nullptr));
 static std::string connectionMessage;
 static bool showConnectionMessage = false;
+static int currentYAxisUnitIndex = 0;
 
 static PlotType currentPlotType = PlotType::Line;
 
@@ -185,6 +186,11 @@ void renderSettings()
     ImGui::Separator();
     if (ImGui::TreeNode(Strings::NODE_PLOT_SETTINGS))
     {
+        ImGui::Text("Value Axis Units:");
+        if (ImGui::Combo("##YAxisUnits", &currentYAxisUnitIndex, Y_AXIS_UNIT_LABELS, IM_ARRAYSIZE(Y_AXIS_UNIT_LABELS)))
+        {
+            currentYAxisUnit = (YAxisUnit)currentYAxisUnitIndex;
+        }
         ImGui::Text(Strings::LABEL_PLOT_TYPE);
         if (ImGui::RadioButton(Strings::RADIO_BUTTON_LINE, currentPlotType == PlotType::Line))
         {

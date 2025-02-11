@@ -74,7 +74,7 @@ int valueTickFormatter(double value, char *buff, int size, void *user_data)
     case YAxisUnit::No:
         break;
     case YAxisUnit::Seconds:
-        unit = "B";
+        unit = "s";
         for (auto &it : TIME_UNITS)
         {
             if (abs(value) < it.first)
@@ -84,7 +84,7 @@ int valueTickFormatter(double value, char *buff, int size, void *user_data)
         }
         break;
     case YAxisUnit::Bytes:
-        unit = "B";
+        unit = " B";
         value_format = "%.0f";
         for (auto &it : SIZE_UNITS)
         {
@@ -97,9 +97,10 @@ int valueTickFormatter(double value, char *buff, int size, void *user_data)
     case YAxisUnit::Percents:
         value *= 100;
         unit = "%";
+        value_format = "%.0f";
         break;
     }
-    value_format += " %s";
+    value_format += "%s";
     std::snprintf(buff, sizeof(buff) - 1, value_format.c_str(), value, unit.c_str());
     return std::strlen(buff);
 }

@@ -63,4 +63,6 @@ enum class YAxisUnit
     Percents,
 };
 
+constexpr const char *Y_AXIS_UNIT_LABELS[] = {"Count", "Seconds", "Bytes", "Percent"};
+
 #endif // APP_CONSTANTS_H
