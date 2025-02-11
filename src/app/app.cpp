@@ -98,6 +98,7 @@ void renderMetricsViewer()
         ImPlot::SetupAxisLimits(ImAxis_X1, leftTimeBound, rightTimeBound);
         ImPlot::SetupAxes("Time", "Value");
         ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, HUGE_VAL);
+        ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, std::numeric_limits<int32_t>::lowest(), std::numeric_limits<int32_t>::max());
         ImPlot::SetupAxisFormat(ImAxis_X1, timeTickFormatter, nullptr);
         ImPlot::SetupAxisFormat(ImAxis_Y1, valueTickFormatter, &currentYAxisUnit);
 
