@@ -15,6 +15,8 @@ constexpr const char *DEFAULT_QUERY = "test_metric";
 constexpr int DEFAULT_FETCH_RANGE = 3600;         // Диапазон запроса данных в секундах (1ч)
 constexpr float DEFAULT_REFRESH_INTERVAL = 60;    // Интервал автообновления (1м)
 constexpr int DEFAULT_PLOT_TIME_RANGE = 2 * 3600; // Дефолтное окно просмотра (2ч)
+constexpr double DEFAULT_MIN_Y = 0;
+constexpr double DEFAULT_MAX_Y = 1;
 
 namespace Strings
 {

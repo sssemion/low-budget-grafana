@@ -1,8 +1,10 @@
 #define GL_SILENCE_DEPRECATION
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <ctime>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -49,6 +51,24 @@ void fetchData()
 
     seriesData.clear();
 
+    double minY = std::numeric_limits<double>::max();
+    double maxY = std::numeric_limits<double>::lowest();
+
+    for (const auto &m : metrics)
+    {
+        for (const auto &p : m.values)
+        {
+            if (p.value < minY)
+                minY = p.value;
+            if (p.value > maxY)
+                maxY = p.value;
+        }
+    }
+    double yMargin = std::max((maxY - minY) * 0.1, 1.0);
+    minY -= yMargin;
+    maxY += yMargin;
+    ImPlot::SetNextAxisLimits(ImAxis_Y1, minY, maxY, ImPlotCond_Always);
+
     for (auto &m : metrics)
     {
         GraphSeries s;
@@ -71,6 +91,7 @@ void renderMetricsViewer()
     ImVec2 plotSize = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
     if (ImPlot::BeginPlot("Time Series", plotSize, ImPlotFlags_NoTitle))
     {
+        ImPlot::SetupAxisLimits(ImAxis_Y1, DEFAULT_MIN_Y, DEFAULT_MAX_Y);
         ImPlot::SetupAxisLimits(ImAxis_X1, leftTimeBound, rightTimeBound);
         ImPlot::SetupAxes("Time", "Value");
         ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, HUGE_VAL);
@@ -144,13 +165,10 @@ void renderSettings()
     if (ImGui::TreeNode(Strings::NODE_QUERY))
     {
         ImGui::Text(Strings::LABEL_QUERY);
-        static char queryBuffer[128];
-        strncpy(queryBuffer, DEFAULT_QUERY, sizeof(queryBuffer) - 1);
+        static char queryBuffer[255] = {}; // Инициализация пустого буфера
         queryBuffer[sizeof(queryBuffer) - 1] = '\0';
-        if (ImGui::InputText("##QueryStr", queryBuffer, IM_ARRAYSIZE(queryBuffer)))
-        {
-            queryStr = queryBuffer;
-        }
+        ImGui::InputText("##QueryStr", queryBuffer, IM_ARRAYSIZE(queryBuffer));
+        queryStr = queryBuffer;
 
         if (ImGui::Button(Strings::BUTTON_FETCH_DATA))
         {
