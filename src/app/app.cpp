@@ -36,6 +36,9 @@ static std::string connectionMessage;
 static bool showConnectionMessage = false;
 
 static PlotType currentPlotType = PlotType::Line;
+
+YAxisUnit currentYAxisUnit = YAxisUnit::No;
+
 static std::vector<GraphSeries> seriesData;
 
 void fetchData()
@@ -96,6 +99,7 @@ void renderMetricsViewer()
         ImPlot::SetupAxes("Time", "Value");
         ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, HUGE_VAL);
         ImPlot::SetupAxisFormat(ImAxis_X1, timeTickFormatter, nullptr);
+        ImPlot::SetupAxisFormat(ImAxis_Y1, valueTickFormatter, &currentYAxisUnit);
 
         // Обновляем границы времени при изменении масштаба в графике
         ImPlotRange range = ImPlot::GetPlotLimits().X;
@@ -136,7 +140,7 @@ void renderSettings()
     {
         ImGui::Text(Strings::LABEL_PROMETHEUS_URL);
         static char urlBuffer[128];
-        strncpy(urlBuffer, DEFAULT_PROMETHEUS_URL, sizeof(urlBuffer) - 1);
+        std::strncpy(urlBuffer, DEFAULT_PROMETHEUS_URL, sizeof(urlBuffer) - 1);
         urlBuffer[sizeof(urlBuffer) - 1] = '\0';
         ImGui::InputText("##BaseURL", urlBuffer, IM_ARRAYSIZE(urlBuffer));
 

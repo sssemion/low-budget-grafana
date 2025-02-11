@@ -52,7 +52,15 @@ enum class PlotType
 {
     Line,
     Scatter,
-    Bar
+    Bar,
+};
+
+enum class YAxisUnit
+{
+    No,
+    Seconds,
+    Bytes,
+    Percents,
 };
 
 #endif // APP_CONSTANTS_H
