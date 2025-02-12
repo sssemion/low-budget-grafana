@@ -99,9 +99,10 @@ void renderMetricsViewer()
         ImPlot::SetupAxisLimits(ImAxis_X1, leftTimeBound, rightTimeBound);
         ImPlot::SetupAxes("Time", "Value");
         ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, HUGE_VAL);
-        ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, std::numeric_limits<int32_t>::lowest(), std::numeric_limits<int32_t>::max());
-        ImPlot::SetupAxisFormat(ImAxis_X1, timeTickFormatter, nullptr);
+        ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Time);
         ImPlot::SetupAxisFormat(ImAxis_Y1, valueTickFormatter, &currentYAxisUnit);
+        ImPlot::SetupAxisZoomConstraints(ImAxis_X1, MIN_X_ZOOM, MAX_X_ZOOM);
+        ImPlot::SetupAxisZoomConstraints(ImAxis_Y1, MIN_Y_ZOOM, MAX_Y_ZOOM);
 
         // Обновляем границы времени при изменении масштаба в графике
         ImPlotRange range = ImPlot::GetPlotLimits().X;
@@ -257,7 +258,7 @@ int main(int, char **)
     ImPlot::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     io.Fonts->AddFontDefault();
-    io.FontGlobalScale = 1.2;
+    io.FontGlobalScale = 1.1;
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(GLSL_VERSION);

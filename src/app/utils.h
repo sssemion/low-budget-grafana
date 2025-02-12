@@ -4,8 +4,6 @@
 #include <ctime>
 #include <vector>
 
-int timeTickFormatter(double value, char *buff, int size, void *user_data);
-
 std::string formatTimestamp(std::time_t timestamp);
 
 int valueTickFormatter(double value, char *buff, int size, void *user_data);
