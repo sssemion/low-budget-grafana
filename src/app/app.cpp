@@ -27,7 +27,7 @@ struct GraphSeries
 
 static bool autoRefresh = false;
 static double lastRefreshTime = 0.0;
-static float refreshIntervalSec = DEFAULT_REFRESH_INTERVAL;
+static int refreshIntervalSec = DEFAULT_REFRESH_INTERVAL;
 static std::string queryStr = DEFAULT_QUERY;
 static std::unique_ptr<PrometheusClient> prometheusClient = nullptr;
 static double leftTimeBound = static_cast<double>(std::time(nullptr)) - DEFAULT_PLOT_TIME_RANGE;
@@ -71,7 +71,8 @@ void fetchData()
     double yMargin = std::max((maxY - minY) * 0.1, 1.0);
     minY -= yMargin;
     maxY += yMargin;
-    ImPlot::SetNextAxisLimits(ImAxis_Y1, minY, maxY, ImPlotCond_Always);
+    if (metrics.size())
+        ImPlot::SetNextAxisLimits(ImAxis_Y1, minY, maxY, ImPlotCond_Always);
 
     for (auto &m : metrics)
     {
@@ -84,6 +85,7 @@ void fetchData()
         }
         seriesData.push_back(s);
     }
+    lastRefreshTime = glfwGetTime();
 }
 
 void renderMetricsViewer()
@@ -219,9 +221,15 @@ void renderSettings()
         ImGui::Separator();
         ImGui::Checkbox("Auto Refresh", &autoRefresh);
         ImGui::SameLine();
-        ImGui::PushItemWidth(80);
-        ImGui::InputFloat("sec", &refreshIntervalSec, 1.0f, 5.0f, "%.1f");
+        ImGui::PushItemWidth(120);
+        ImGui::InputInt("sec", &refreshIntervalSec, AUTO_REFRESH_INTERVAL_STEP);
+        refreshIntervalSec = std::max(refreshIntervalSec, AUTO_REFRESH_INTERVAL_MIN);
         ImGui::PopItemWidth();
+        if (autoRefresh && glfwGetTime() - lastRefreshTime >= refreshIntervalSec)
+        {
+            fetchData();
+            ImGui::Text("updating...");
+        }
         ImGui::TreePop();
     }
 
