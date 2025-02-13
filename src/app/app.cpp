@@ -28,7 +28,7 @@ struct GraphSeries
 static bool autoRefresh = false;
 static double lastRefreshTime = 0.0;
 static int refreshIntervalSec = DEFAULT_REFRESH_INTERVAL;
-static std::string queryStr = DEFAULT_QUERY;
+static char queryBuffer[255];
 static std::unique_ptr<PrometheusClient> prometheusClient = nullptr;
 static double leftTimeBound = static_cast<double>(std::time(nullptr)) - DEFAULT_PLOT_TIME_RANGE;
 static double rightTimeBound = static_cast<double>(std::time(nullptr));
@@ -42,6 +42,11 @@ YAxisUnit currentYAxisUnit = YAxisUnit::No;
 
 static std::vector<GraphSeries> seriesData;
 
+inline bool needRefresh()
+{
+    return autoRefresh && glfwGetTime() - lastRefreshTime >= refreshIntervalSec;
+}
+
 void fetchData()
 {
     if (!prometheusClient)
@@ -51,7 +56,7 @@ void fetchData()
     std::time_t start = now - DEFAULT_FETCH_RANGE;
     std::time_t end = now;
 
-    std::vector<Metric> metrics = prometheusClient->query(queryStr, start, end);
+    std::vector<Metric> metrics = prometheusClient->query(queryBuffer, start, end);
 
     seriesData.clear();
 
@@ -99,6 +104,12 @@ void renderMetricsViewer()
     {
         ImPlot::SetupAxisLimits(ImAxis_Y1, DEFAULT_MIN_Y, DEFAULT_MAX_Y);
         ImPlot::SetupAxisLimits(ImAxis_X1, leftTimeBound, rightTimeBound);
+        if (needRefresh())
+        {
+            double interval = rightTimeBound - leftTimeBound;
+            std::time_t now = std::time(nullptr);
+            ImPlot::SetupAxisLimits(ImAxis_X1, now - interval, now, ImPlotCond_Always);
+        }
         ImPlot::SetupAxes("Time", "Value");
         ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, HUGE_VAL);
         ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Time);
@@ -109,6 +120,8 @@ void renderMetricsViewer()
         // Обновляем границы времени при изменении масштаба в графике
         ImPlotRange range = ImPlot::GetPlotLimits().X;
         leftTimeBound = range.Min;
+        if (abs(range.Max - rightTimeBound) > 2 * refreshIntervalSec)
+            autoRefresh = false;
         rightTimeBound = range.Max;
 
         for (auto &s : seriesData)
@@ -141,7 +154,7 @@ void renderSettings()
     ImGui::SetNextWindowSize(ImVec2(SETTINGS_WIDTH, WINDOW_HEIGHT), ImGuiCond_Always);
     ImGui::Begin(Strings::WINDOW_SETTINGS, nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
-    if (ImGui::TreeNode(Strings::NODE_CONNECTION))
+    if (ImGui::TreeNodeEx(Strings::NODE_CONNECTION, ImGuiTreeNodeFlags_DefaultOpen))
     {
         ImGui::Text(Strings::LABEL_PROMETHEUS_URL);
         static char urlBuffer[128];
@@ -171,13 +184,10 @@ void renderSettings()
     }
 
     ImGui::Separator();
-    if (ImGui::TreeNode(Strings::NODE_QUERY))
+    if (ImGui::TreeNodeEx(Strings::NODE_QUERY, ImGuiTreeNodeFlags_DefaultOpen))
     {
         ImGui::Text(Strings::LABEL_QUERY);
-        static char queryBuffer[255] = {}; // Инициализация пустого буфера
-        queryBuffer[sizeof(queryBuffer) - 1] = '\0';
         ImGui::InputText("##QueryStr", queryBuffer, IM_ARRAYSIZE(queryBuffer));
-        queryStr = queryBuffer;
 
         if (ImGui::Button(Strings::BUTTON_FETCH_DATA))
         {
@@ -187,7 +197,7 @@ void renderSettings()
     }
 
     ImGui::Separator();
-    if (ImGui::TreeNode(Strings::NODE_PLOT_SETTINGS))
+    if (ImGui::TreeNodeEx(Strings::NODE_PLOT_SETTINGS, ImGuiTreeNodeFlags_DefaultOpen))
     {
         ImGui::Text("Value Axis Units:");
         if (ImGui::Combo("##YAxisUnits", &currentYAxisUnitIndex, Y_AXIS_UNIT_LABELS, IM_ARRAYSIZE(Y_AXIS_UNIT_LABELS)))
@@ -213,7 +223,7 @@ void renderSettings()
     }
 
     ImGui::Separator();
-    if (ImGui::TreeNode(Strings::NODE_TIME_INTERVALS))
+    if (ImGui::TreeNodeEx(Strings::NODE_TIME_INTERVALS, ImGuiTreeNodeFlags_DefaultOpen))
     {
         ImGui::Text("Left bound: %s", formatTimestamp(leftTimeBound).c_str());
         ImGui::Text("Right bound: %s", formatTimestamp(rightTimeBound).c_str());
@@ -225,7 +235,7 @@ void renderSettings()
         ImGui::InputInt("sec", &refreshIntervalSec, AUTO_REFRESH_INTERVAL_STEP);
         refreshIntervalSec = std::max(refreshIntervalSec, AUTO_REFRESH_INTERVAL_MIN);
         ImGui::PopItemWidth();
-        if (autoRefresh && glfwGetTime() - lastRefreshTime >= refreshIntervalSec)
+        if (needRefresh())
         {
             fetchData();
             ImGui::Text("updating...");
@@ -244,6 +254,8 @@ void renderUI()
 
 int main(int, char **)
 {
+    strncpy(queryBuffer, DEFAULT_QUERY, sizeof(queryBuffer));
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
