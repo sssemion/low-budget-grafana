@@ -52,11 +52,7 @@ void fetchData()
     if (!prometheusClient)
         return;
 
-    std::time_t now = std::time(nullptr);
-    std::time_t start = now - DEFAULT_FETCH_RANGE;
-    std::time_t end = now;
-
-    std::vector<Metric> metrics = prometheusClient->query(queryBuffer, start, end);
+    std::vector<Metric> metrics = prometheusClient->query(queryBuffer, leftTimeBound, rightTimeBound);
 
     seriesData.clear();
 
@@ -109,6 +105,8 @@ void renderMetricsViewer()
             double interval = rightTimeBound - leftTimeBound;
             std::time_t now = std::time(nullptr);
             ImPlot::SetupAxisLimits(ImAxis_X1, now - interval, now, ImPlotCond_Always);
+            leftTimeBound = now - interval;
+            rightTimeBound = now;
         }
         ImPlot::SetupAxes("Time", "Value");
         ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, HUGE_VAL);
@@ -120,7 +118,7 @@ void renderMetricsViewer()
         // Обновляем границы времени при изменении масштаба в графике
         ImPlotRange range = ImPlot::GetPlotLimits().X;
         leftTimeBound = range.Min;
-        if (abs(range.Max - rightTimeBound) > 2 * refreshIntervalSec)
+        if (range.Max != rightTimeBound)
             autoRefresh = false;
         rightTimeBound = range.Max;
 
@@ -144,6 +142,8 @@ void renderMetricsViewer()
         }
 
         ImPlot::EndPlot();
+        if (needRefresh())
+            fetchData();
     }
     ImGui::End();
 }
@@ -235,11 +235,11 @@ void renderSettings()
         ImGui::InputInt("sec", &refreshIntervalSec, AUTO_REFRESH_INTERVAL_STEP);
         refreshIntervalSec = std::max(refreshIntervalSec, AUTO_REFRESH_INTERVAL_MIN);
         ImGui::PopItemWidth();
-        if (needRefresh())
-        {
-            fetchData();
-            ImGui::Text("updating...");
-        }
+        // if (needRefresh())
+        // {
+        //     fetchData();
+        //     ImGui::Text("updating...");
+        // }
         ImGui::TreePop();
     }
 
