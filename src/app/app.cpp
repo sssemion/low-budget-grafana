@@ -41,6 +41,7 @@ static PlotType currentPlotType = PlotType::Line;
 YAxisUnit currentYAxisUnit = YAxisUnit::No;
 
 static std::vector<GraphSeries> seriesData;
+static int selectedStep = DEFAULT_STEP;
 
 inline bool needRefresh()
 {
@@ -52,7 +53,11 @@ void fetchData()
     if (!prometheusClient)
         return;
 
-    std::vector<Metric> metrics = prometheusClient->query(queryBuffer, leftTimeBound, rightTimeBound);
+    double interval = rightTimeBound - leftTimeBound;
+    int step = selectedStep;
+    if (selectedStep * PROMETHEUS_MAX_POINTS_PER_REQUEST < interval)
+        step = std::ceil(interval / (double)PROMETHEUS_MAX_POINTS_PER_REQUEST);
+    std::vector<Metric> metrics = prometheusClient->query(queryBuffer, leftTimeBound, rightTimeBound, step);
 
     seriesData.clear();
 
@@ -229,17 +234,28 @@ void renderSettings()
         ImGui::Text("Right bound: %s", formatTimestamp(rightTimeBound).c_str());
 
         ImGui::Separator();
+
+        ImGui::Text("Step");
+        ImGui::SameLine();
+        ImGui::PushItemWidth(120);
+        ImGui::InputInt("##Step", &selectedStep, 1, 10);
+        selectedStep = std::max(1, selectedStep);
+        ImGui::SameLine();
+        ImGui::Text("sec");
+        ImGui::PopItemWidth();
+
         ImGui::Checkbox("Auto Refresh", &autoRefresh);
         ImGui::SameLine();
         ImGui::PushItemWidth(120);
-        ImGui::InputInt("sec", &refreshIntervalSec, AUTO_REFRESH_INTERVAL_STEP);
+        ImGui::InputInt("##RefreshInterval", &refreshIntervalSec, AUTO_REFRESH_INTERVAL_STEP);
         refreshIntervalSec = std::max(refreshIntervalSec, AUTO_REFRESH_INTERVAL_MIN);
+        ImGui::SameLine();
+        ImGui::Text("sec");
         ImGui::PopItemWidth();
-        // if (needRefresh())
-        // {
-        //     fetchData();
-        //     ImGui::Text("updating...");
-        // }
+        if (needRefresh())
+        {
+            ImGui::Text("updating...");
+        }
         ImGui::TreePop();
     }
 

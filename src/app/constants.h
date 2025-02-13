@@ -21,6 +21,8 @@ constexpr double MIN_X_ZOOM = 1e-3, MAX_X_ZOOM = 3600 * 24 * 30 * 3; // from 1ms
 constexpr double MIN_Y_ZOOM = 1e-6, MAX_Y_ZOOM = 1e12;
 constexpr double DEFAULT_MIN_Y = 0, DEFAULT_MAX_Y = 1;
 constexpr int AUTO_REFRESH_INTERVAL_STEP = 5, AUTO_REFRESH_INTERVAL_MIN = 5;
+constexpr int DEFAULT_STEP = 15;
+constexpr int PROMETHEUS_MAX_POINTS_PER_REQUEST = 11'000;
 
 namespace Strings
 {
