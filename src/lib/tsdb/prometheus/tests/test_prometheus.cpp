@@ -64,7 +64,7 @@ public:
     };
 
 protected:
-    std::string performHttpRequest(const std::string &url) override
+    std::string performHttpRequest(const std::string &url, int timeout) override
     {
         if (!ready)
             throw std::runtime_error("Перед тестом необходимо замокать запрос через `mockRequest`");

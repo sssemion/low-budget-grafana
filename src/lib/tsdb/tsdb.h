@@ -78,7 +78,7 @@ protected:
      * @param url URL для запроса
      * @return Ответ от сервера
      */
-    virtual std::string performHttpRequest(const std::string &url);
+    virtual std::string performHttpRequest(const std::string &url, int timeout = 5);
 
     /**
      * @brief Callback для записи данных из CURL.

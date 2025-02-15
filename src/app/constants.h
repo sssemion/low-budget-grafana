@@ -52,6 +52,7 @@ namespace Strings
 
     constexpr const char *MESSAGE_CONNECTION_SUCCESS = "Connection successful!";
     constexpr const char *MESSAGE_CONNECTION_FAILED = "Failed to connect to Prometheus.";
+    constexpr const char *MESSAGE_CLIENT_NOT_SET_UP = "Prometheus client is not set up.";
 }
 
 enum class PlotType

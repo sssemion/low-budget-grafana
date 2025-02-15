@@ -15,7 +15,7 @@ std::string TSDBClient::format_line_name(const std::string &name, const std::map
     return res;
 }
 
-std::string TSDBClient::performHttpRequest(const std::string &url)
+std::string TSDBClient::performHttpRequest(const std::string &url, int timeout)
 {
     CURL* curl = curl_easy_init();
     if (!curl) {
@@ -26,6 +26,7 @@ std::string TSDBClient::performHttpRequest(const std::string &url)
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
 
     CURLcode res = curl_easy_perform(curl);
     curl_easy_cleanup(curl);

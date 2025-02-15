@@ -28,6 +28,7 @@ struct GraphSeries
 static bool autoRefresh = false;
 static double lastRefreshTime = 0.0;
 static int refreshIntervalSec = DEFAULT_REFRESH_INTERVAL;
+static char urlBuffer[255];
 static char queryBuffer[255];
 static std::unique_ptr<PrometheusClient> prometheusClient = nullptr;
 static double leftTimeBound = static_cast<double>(std::time(nullptr)) - DEFAULT_PLOT_TIME_RANGE;
@@ -56,7 +57,7 @@ void fetchData()
     if (!prometheusClient)
     {
         showRequestErrorMsg = true;
-        requestErrorMsg = "Prometheus client is not set up";
+        requestErrorMsg = Strings::MESSAGE_CLIENT_NOT_SET_UP;
         return;
     }
 
@@ -180,9 +181,6 @@ void renderSettings()
     if (ImGui::TreeNodeEx(Strings::NODE_CONNECTION, ImGuiTreeNodeFlags_DefaultOpen))
     {
         ImGui::Text(Strings::LABEL_PROMETHEUS_URL);
-        static char urlBuffer[128];
-        std::strncpy(urlBuffer, DEFAULT_PROMETHEUS_URL, sizeof(urlBuffer) - 1);
-        urlBuffer[sizeof(urlBuffer) - 1] = '\0';
         ImGui::InputText("##BaseURL", urlBuffer, IM_ARRAYSIZE(urlBuffer));
 
         if (ImGui::Button(Strings::BUTTON_CONNECT))
@@ -218,9 +216,7 @@ void renderSettings()
         }
         if (showRequestErrorMsg)
         {
-            ImGui::PushTextWrapPos(ImGui::GetContentRegionAvail().x); // Ограничение по ширине
             ImGui::TextWrapped("%s", requestErrorMsg.c_str());
-            ImGui::PopTextWrapPos();
         }
         ImGui::TreePop();
     }
@@ -294,7 +290,8 @@ void renderUI()
 
 int main(int, char **)
 {
-    strncpy(queryBuffer, DEFAULT_QUERY, sizeof(queryBuffer));
+    std::strncpy(urlBuffer, DEFAULT_PROMETHEUS_URL, sizeof(urlBuffer));
+    std::strncpy(queryBuffer, DEFAULT_QUERY, sizeof(queryBuffer));
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
