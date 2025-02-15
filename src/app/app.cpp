@@ -40,8 +40,7 @@ static std::string requestErrorMsg = "";
 static bool showRequestErrorMsg = false;
 
 static PlotType currentPlotType = PlotType::Line;
-
-YAxisUnit currentYAxisUnit = YAxisUnit::No;
+static YAxisUnit currentYAxisUnit = YAxisUnit::No;
 
 static std::vector<GraphSeries> seriesData;
 static int selectedStep = DEFAULT_STEP;
@@ -135,6 +134,7 @@ void renderMetricsViewer()
         ImPlot::SetupAxes("Time", "Value");
         ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, HUGE_VAL);
         ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Time);
+        ImPlot::GetStyle().UseLocalTime = true;
         ImPlot::SetupAxisFormat(ImAxis_Y1, valueTickFormatter, &currentYAxisUnit);
         ImPlot::SetupAxisZoomConstraints(ImAxis_X1, MIN_X_ZOOM, MAX_X_ZOOM);
         ImPlot::SetupAxisZoomConstraints(ImAxis_Y1, MIN_Y_ZOOM, MAX_Y_ZOOM);
