@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
-      fail-fast: true
+      fail-fast: false
 
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -30,6 +30,25 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Install OpenGL and dependencies (Linux only)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libgl1-mesa-dev \
+          libglu1-mesa-dev \
+          mesa-utils \
+          xvfb \
+          libx11-dev \
+          libxrandr-dev \
+          libxi-dev \
+          libxinerama-dev \
+          libxcursor-dev \
+          libgl1-mesa-dev \
+          libglu1-mesa-dev \
+          mesa-common-dev
+
 
     - name: Set reusable strings
       id: strings

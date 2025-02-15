@@ -1,12 +1,40 @@
 #ifndef TSDB_PROMETHEUS_H
 #define TSDB_PROMETHEUS_H
 
+#include <ctime>
+
 #include "../tsdb.h"
+
+/**
+ * @brief Исключение, возникающее при ошибке запроса к Prometheus.
+ */
+class InvalidPrometheusRequest : public std::exception
+{
+public:
+    /**
+     * @brief Конструктор исключения.
+     *
+     * @param errorMsg Сообщение об ошибке.
+     * @param errorType Тип ошибки.
+     */
+    InvalidPrometheusRequest(const std::string &errorMsg, const std::string &errorType);
+
+    /**
+     * @brief Получить описание ошибки.
+     *
+     * @return Строка с описанием ошибки.
+     */
+    const char *what() const noexcept override;
+
+private:
+    std::string message;
+};
 
 /**
  * @brief Клиент к Prometheus
  */
-class PrometheusClient : public TSDBClient {
+class PrometheusClient : public TSDBClient
+{
 public:
     /**
      * @brief Конструктор клиента Prometheus.
@@ -16,18 +44,26 @@ public:
     explicit PrometheusClient(const std::string &base_url);
     ~PrometheusClient() override = default;
 
-    std::vector<Metric> query(const std::string &query_str, Timestamp start, Timestamp end) override;
-
     /**
      * @brief Выполнить запрос к Prometheus для получения данных.
+     *
+     * @param query_str Строка запроса в формате PromQL
+     * @param start Начало временного диапазона
+     * @param end Конец временного диапазона
+     * @return Массив метрик типа Metric
+     */
+    std::vector<Metric> query(const std::string &query_str, std::time_t start, std::time_t end) override;
 
-     * @param query Строка запроса в формате PromQL
+    /**
+     * @brief Выполнить запрос к Prometheus с шагом между точками.
+     *
+     * @param query_str Строка запроса в формате PromQL
      * @param start Начало временного диапазона
      * @param end Конец временного диапазона
      * @param step Интервал между точками в секундах, по умолчанию 15
      * @return Массив метрик типа Metric
      */
-    std::vector<Metric> query(const std::string &query_str, Timestamp start, Timestamp end, int step);
+    std::vector<Metric> query(const std::string &query_str, std::time_t start, std::time_t end, int step);
 
     /**
      * @brief Проверить доступность Prometheus.
@@ -36,12 +72,16 @@ public:
      */
     bool isAvailable() override;
 
-
 protected:
-    std::string base_url; // Базовый URL для API Prometheus
+    std::string base_url;
 
+    /**
+     * @brief Распарсить ответ от Prometheus.
+     *
+     * @param response JSON-ответ от Prometheus
+     * @return Вектор метрик
+     */
     std::vector<Metric> parse_response(const std::string &response);
 };
-
 
 #endif // TSDB_PROMETHEUS_H

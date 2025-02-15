@@ -19,6 +19,6 @@ if(TEST)
 endif()
 
 add_subdirectory(thirdparty)
-
+add_subdirectory(app)
 add_subdirectory(lib)
 include_directories(lib)
