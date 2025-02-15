@@ -35,6 +35,8 @@ static double rightTimeBound = static_cast<double>(std::time(nullptr));
 static std::string connectionMessage;
 static bool showConnectionMessage = false;
 static int currentYAxisUnitIndex = 0;
+static std::string requestErrorMsg = "";
+static bool showRequestErrorMsg = false;
 
 static PlotType currentPlotType = PlotType::Line;
 
@@ -50,14 +52,30 @@ inline bool needRefresh()
 
 void fetchData()
 {
+    showRequestErrorMsg = false;
     if (!prometheusClient)
+    {
+        showRequestErrorMsg = true;
+        requestErrorMsg = "Prometheus client is not set up";
         return;
+    }
 
     double interval = rightTimeBound - leftTimeBound;
     int step = selectedStep;
     if (selectedStep * PROMETHEUS_MAX_POINTS_PER_REQUEST < interval)
         step = std::ceil(interval / (double)PROMETHEUS_MAX_POINTS_PER_REQUEST);
-    std::vector<Metric> metrics = prometheusClient->query(queryBuffer, leftTimeBound, rightTimeBound, step);
+
+    std::vector<Metric> metrics;
+    try
+    {
+        metrics = prometheusClient->query(queryBuffer, leftTimeBound, rightTimeBound, step);
+    }
+    catch (InvalidPrometheusRequest &error)
+    {
+        showRequestErrorMsg = true;
+        requestErrorMsg = error.what();
+        return;
+    }
 
     seriesData.clear();
 
@@ -192,11 +210,17 @@ void renderSettings()
     if (ImGui::TreeNodeEx(Strings::NODE_QUERY, ImGuiTreeNodeFlags_DefaultOpen))
     {
         ImGui::Text(Strings::LABEL_QUERY);
-        ImGui::InputText("##QueryStr", queryBuffer, IM_ARRAYSIZE(queryBuffer));
+        ImGui::InputTextMultiline("##QueryStr", queryBuffer, IM_ARRAYSIZE(queryBuffer), ImVec2(0, ImGui::GetTextLineHeight() * 5));
 
         if (ImGui::Button(Strings::BUTTON_FETCH_DATA))
         {
             fetchData();
+        }
+        if (showRequestErrorMsg)
+        {
+            ImGui::PushTextWrapPos(ImGui::GetContentRegionAvail().x); // Ограничение по ширине
+            ImGui::TextWrapped("%s", requestErrorMsg.c_str());
+            ImGui::PopTextWrapPos();
         }
         ImGui::TreePop();
     }

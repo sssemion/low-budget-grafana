@@ -5,10 +5,22 @@
 
 #include "../tsdb.h"
 
+class InvalidPrometheusRequest : public std::exception
+{
+public:
+    InvalidPrometheusRequest(const std::string &errorMsg, const std::string &errorType);
+
+    const char *what() const noexcept override;
+
+private:
+    std::string message;
+};
+
 /**
  * @brief Клиент к Prometheus
  */
-class PrometheusClient : public TSDBClient {
+class PrometheusClient : public TSDBClient
+{
 public:
     /**
      * @brief Конструктор клиента Prometheus.
@@ -44,6 +56,5 @@ protected:
 
     std::vector<Metric> parse_response(const std::string &response);
 };
-
 
 #endif // TSDB_PROMETHEUS_H

@@ -3,7 +3,7 @@
 #include "prometheus.h"
 #include <nlohmann/json.hpp>
 
-PrometheusClient::PrometheusClient(const std::string& base_url) : base_url(base_url) {}
+PrometheusClient::PrometheusClient(const std::string &base_url) : base_url(base_url) {}
 
 std::vector<Metric> PrometheusClient::query(const std::string &query_str, std::time_t start, std::time_t end)
 {
@@ -22,11 +22,14 @@ std::vector<Metric> PrometheusClient::query(const std::string &query_str, std::t
 
 bool PrometheusClient::isAvailable()
 {
-    try {
+    try
+    {
         std::string url = base_url + "/-/healthy";
         std::string response = performHttpRequest(url);
         return response == "Prometheus Server is Healthy.\n";
-    } catch (...) {
+    }
+    catch (...)
+    {
         return false;
     }
 }
@@ -37,23 +40,34 @@ std::vector<Metric> PrometheusClient::parse_response(const std::string &response
 
     auto parsed_json = nlohmann::json::parse(response);
 
-    if (parsed_json["status"] != "success") {
-        throw std::runtime_error("Prometheus request failed");
+    if (parsed_json["status"] == "error")
+    {
+        throw InvalidPrometheusRequest(parsed_json["error"], parsed_json["errorType"]);
+    }
+    else if (parsed_json["status"] != "success")
+    {
+        throw std::runtime_error("Unexpexted prometheus request error");
     }
 
-    for (const auto& result : parsed_json["data"]["result"]) {
+    for (const auto &result : parsed_json["data"]["result"])
+    {
         Metric metric;
 
         auto metric_info = result["metric"];
-        for (auto it = metric_info.begin(); it != metric_info.end(); ++it) {
-            if (it.key() == "__name__") {
+        for (auto it = metric_info.begin(); it != metric_info.end(); ++it)
+        {
+            if (it.key() == "__name__")
+            {
                 metric.name = it.value();
-            } else {
+            }
+            else
+            {
                 metric.labels[it.key()] = it.value();
             }
         }
 
-        for (const auto& value_pair : result["values"]) {
+        for (const auto &value_pair : result["values"])
+        {
             Point point;
             point.timestamp = value_pair[0];
             point.value = std::stod((std::string)value_pair[1]);
@@ -63,4 +77,14 @@ std::vector<Metric> PrometheusClient::parse_response(const std::string &response
         metrics.push_back(metric);
     }
     return metrics;
+}
+
+InvalidPrometheusRequest::InvalidPrometheusRequest(const std::string &errorMsg, const std::string &errorType)
+{
+    message = errorType + ": " + errorMsg;
+}
+
+const char *InvalidPrometheusRequest::what() const noexcept
+{
+    return message.c_str();
 }
