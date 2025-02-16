@@ -1,3 +1,22 @@
+/**
+ * @file tsdb.h
+ * @brief Определяет интерфейс для работы с Time Series Database (TSDB).
+ *
+ * Этот заголовочный файл содержит абстрактный класс `TSDBClient`, который определяет интерфейс
+ * для взаимодействия с базами данных временных рядов (TSDB), такими как Prometheus, InfluxDB и другие.
+ *
+ * Также в файле определены структуры `Metric` и `Point`, используемые для хранения и обработки данных временных рядов.
+ */
+
+/**
+ * @defgroup tsdb Abstract TSDB
+ * @ingroup lib
+ * @brief Группа классов и структур для работы с TSDB.
+ *
+ * Этот модуль предоставляет интерфейс и структуры данных для взаимодействия с базами данных временных рядов (TSDB).
+ */
+/** @{ */
+
 #ifndef TSDB_ABC_H
 #define TSDB_ABC_H
 
@@ -5,6 +24,25 @@
 #include <map>
 #include <string>
 #include <vector>
+
+/**
+ * @brief Исключение, возникающее при ошибке запроса к TSDB.
+ */
+class InvalidTSDBRequest : public std::exception
+{
+public:
+    virtual ~InvalidTSDBRequest() = default;
+
+    /**
+     * @brief Получить описание ошибки.
+     *
+     * @return Строка с описанием ошибки.
+     */
+    virtual const char *what() const noexcept override;
+
+protected:
+    std::string message;
+};
 
 /**
  * @brief Описывает одну точку данных временного ряда.
@@ -18,7 +56,7 @@ struct Point
 };
 
 /**
- * @brief Описывакт метрику, содержащую временной ряд данных.
+ * @brief Описывает метрику, содержащую временной ряд данных.
  *
  * Метрика включает имя, набор меток и значения, представленные точками временного ряда.
  */
@@ -44,6 +82,7 @@ public:
      * @param start Начало временного диапазона
      * @param end Конец временного диапазона
      * @return Массив метрик типа Metric
+     * @throws InvalidTSDBRequest В случае неуспешного статуса ответа от TSDB
      */
     virtual std::vector<Metric> query(const std::string &query_str, std::time_t start, std::time_t end) = 0;
 
@@ -52,7 +91,7 @@ public:
      *
      * @return true, если TSDB доступна, иначе false
      */
-    virtual bool isAvailable() = 0;
+    virtual bool isAvailable() noexcept = 0;
 
     /**
      * @brief Форматирует имя линии графика на основе метрики.
@@ -91,5 +130,7 @@ protected:
      */
     static size_t writeCallback(void *contents, size_t size, size_t nmemb, void *userp);
 };
+
+/** @} */
 
 #endif // TSDB_ABC_H

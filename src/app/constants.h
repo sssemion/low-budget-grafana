@@ -1,3 +1,23 @@
+/**
+ * @file constants.h
+ * @brief Определение констант, строковых значений и enum'ов для приложения.
+ *
+ * @details Этот файл содержит глобальные константы, используемые в различных частях приложения, включая настройки
+ * по умолчанию, строки сообщений и перечисления (enum).
+ */
+
+/**
+ * @defgroup Constants Глобальные константы
+ * @ingroup app
+ * @brief Содержит константные значения, строки и enum'ы, используемые в приложении.
+ *
+ * @details Включает в себя:
+ *          - Числовые и строковые константы.
+ *          - Константы для конфигурации приложения.
+ *          - Перечисления (enum) для различных режимов работы.
+ */
+/** @{ */
+
 #ifndef APP_CONSTANTS_H
 #define APP_CONSTANTS_H
 
@@ -55,21 +75,29 @@ namespace Strings
     constexpr const char *MESSAGE_CLIENT_NOT_SET_UP = "Prometheus client is not set up.";
 }
 
+/**
+ * @brief Типы графиков для визуализации данных.
+ */
 enum class PlotType
 {
-    Line,
-    Scatter,
-    Bar,
+    Line,       ///< Линия
+    Scatter,    ///< Точки
+    Bar         ///< Столбцы
 };
 
+/**
+ * @brief Единицы измерения для оси значений на графиках.
+ */
 enum class YAxisUnit
 {
-    No,
-    Seconds,
-    Bytes,
-    Percents,
+    No,         ///< Нет единиц измерения
+    Seconds,    ///< Секунды
+    Bytes,      ///< Байты
+    Percents    ///< Проценты
 };
 
 constexpr const char *Y_AXIS_UNIT_LABELS[] = {"Count", "Seconds", "Bytes", "Percent"};
 
 #endif // APP_CONSTANTS_H
+
+/** @} */

@@ -20,7 +20,7 @@ std::vector<Metric> PrometheusClient::query(const std::string &query_str, std::t
     return parse_response(response);
 }
 
-bool PrometheusClient::isAvailable()
+bool PrometheusClient::isAvailable() noexcept
 {
     try
     {
@@ -82,9 +82,4 @@ std::vector<Metric> PrometheusClient::parse_response(const std::string &response
 InvalidPrometheusRequest::InvalidPrometheusRequest(const std::string &errorMsg, const std::string &errorType)
 {
     message = errorType + ": " + errorMsg;
-}
-
-const char *InvalidPrometheusRequest::what() const noexcept
-{
-    return message.c_str();
 }

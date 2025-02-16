@@ -1,3 +1,24 @@
+/**
+ * @file prometheus.h
+ * @brief Реализация интерфейса для работы с Prometheus.
+ *
+ * @details Этот заголовочный файл содержит класс `PrometheusClient`, который является реализацией
+ *          интерфейса `TSDBClient` для взаимодействия с Prometheus.
+ *
+ *          Класс предоставляет методы для и чтения метрик из Prometheus и проверки доступности сервера с
+ *          использованием HTTP API.
+ */
+
+/**
+ * @defgroup prometheus Клиент к Prometheus
+ * @ingroup tsdb
+ * @brief Клиент для взаимодействия с Prometheus.
+ *
+ * @details  модуль включает `PrometheusClient`, реализующий интерфейс `TSDBClient`, для работы с Prometheus.
+ *           Реализация включает методы для запроса метрик и проверки доступности сервера через HTTP API.
+ */
+/** @{ */
+
 #ifndef TSDB_PROMETHEUS_H
 #define TSDB_PROMETHEUS_H
 
@@ -8,7 +29,7 @@
 /**
  * @brief Исключение, возникающее при ошибке запроса к Prometheus.
  */
-class InvalidPrometheusRequest : public std::exception
+class InvalidPrometheusRequest : public InvalidTSDBRequest
 {
 public:
     /**
@@ -18,16 +39,6 @@ public:
      * @param errorType Тип ошибки.
      */
     InvalidPrometheusRequest(const std::string &errorMsg, const std::string &errorType);
-
-    /**
-     * @brief Получить описание ошибки.
-     *
-     * @return Строка с описанием ошибки.
-     */
-    const char *what() const noexcept override;
-
-private:
-    std::string message;
 };
 
 /**
@@ -51,6 +62,7 @@ public:
      * @param start Начало временного диапазона
      * @param end Конец временного диапазона
      * @return Массив метрик типа Metric
+     * @throws InvalidPrometheusRequest В случае неуспешного статуса ответа от Prometheus
      */
     std::vector<Metric> query(const std::string &query_str, std::time_t start, std::time_t end) override;
 
@@ -62,6 +74,7 @@ public:
      * @param end Конец временного диапазона
      * @param step Интервал между точками в секундах, по умолчанию 15
      * @return Массив метрик типа Metric
+     * @throws InvalidPrometheusRequest В случае неуспешного статуса ответа от Prometheus
      */
     std::vector<Metric> query(const std::string &query_str, std::time_t start, std::time_t end, int step);
 
@@ -70,7 +83,7 @@ public:
      *
      * @return true, если Prometheus доступен, иначе false
      */
-    bool isAvailable() override;
+    bool isAvailable() noexcept override;
 
 protected:
     std::string base_url;
@@ -83,5 +96,7 @@ protected:
      */
     std::vector<Metric> parse_response(const std::string &response);
 };
+
+/** @} */
 
 #endif // TSDB_PROMETHEUS_H
