@@ -2,3 +2,4 @@
 build/
 docs/
 **/.DS_Store
+**/imgui.ini

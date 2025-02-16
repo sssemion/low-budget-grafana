@@ -1,3 +1,24 @@
+/**
+ * @file prometheus.h
+ * @brief Реализация интерфейса для работы с Prometheus.
+ *
+ * @details Этот заголовочный файл содержит класс `PrometheusClient`, который является реализацией
+ *          интерфейса `TSDBClient` для взаимодействия с Prometheus.
+ *
+ *          Класс предоставляет методы для и чтения метрик из Prometheus и проверки доступности сервера с
+ *          использованием HTTP API.
+ */
+
+/**
+ * @defgroup prometheus Клиент к Prometheus
+ * @ingroup tsdb
+ * @brief Клиент для взаимодействия с Prometheus.
+ *
+ * @details  модуль включает `PrometheusClient`, реализующий интерфейс `TSDBClient`, для работы с Prometheus.
+ *           Реализация включает методы для запроса метрик и проверки доступности сервера через HTTP API.
+ */
+/** @{ */
+
 #ifndef TSDB_PROMETHEUS_H
 #define TSDB_PROMETHEUS_H
 
@@ -75,5 +96,7 @@ protected:
      */
     std::vector<Metric> parse_response(const std::string &response);
 };
+
+/** @} */
 
 #endif // TSDB_PROMETHEUS_H
