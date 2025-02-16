@@ -2,6 +2,11 @@
 #include <curl/curl.h>
 #include <stdexcept>
 
+const char *InvalidTSDBRequest::what() const noexcept
+{
+    return message.c_str();
+}
+
 std::string TSDBClient::format_line_name(const std::string &name, const std::map<std::string, std::string> &labels)
 {
     std::string res = name;

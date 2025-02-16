@@ -8,7 +8,7 @@
 /**
  * @brief Исключение, возникающее при ошибке запроса к Prometheus.
  */
-class InvalidPrometheusRequest : public std::exception
+class InvalidPrometheusRequest : public InvalidTSDBRequest
 {
 public:
     /**
@@ -18,16 +18,6 @@ public:
      * @param errorType Тип ошибки.
      */
     InvalidPrometheusRequest(const std::string &errorMsg, const std::string &errorType);
-
-    /**
-     * @brief Получить описание ошибки.
-     *
-     * @return Строка с описанием ошибки.
-     */
-    const char *what() const noexcept override;
-
-private:
-    std::string message;
 };
 
 /**
@@ -51,6 +41,7 @@ public:
      * @param start Начало временного диапазона
      * @param end Конец временного диапазона
      * @return Массив метрик типа Metric
+     * @throws InvalidPrometheusRequest В случае неуспешного статуса ответа от Prometheus
      */
     std::vector<Metric> query(const std::string &query_str, std::time_t start, std::time_t end) override;
 
@@ -62,6 +53,7 @@ public:
      * @param end Конец временного диапазона
      * @param step Интервал между точками в секундах, по умолчанию 15
      * @return Массив метрик типа Metric
+     * @throws InvalidPrometheusRequest В случае неуспешного статуса ответа от Prometheus
      */
     std::vector<Metric> query(const std::string &query_str, std::time_t start, std::time_t end, int step);
 
@@ -70,7 +62,7 @@ public:
      *
      * @return true, если Prometheus доступен, иначе false
      */
-    bool isAvailable() override;
+    bool isAvailable() noexcept override;
 
 protected:
     std::string base_url;

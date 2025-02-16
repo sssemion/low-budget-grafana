@@ -7,6 +7,25 @@
 #include <vector>
 
 /**
+ * @brief Исключение, возникающее при ошибке запроса к TSDB.
+ */
+class InvalidTSDBRequest : public std::exception
+{
+public:
+    virtual ~InvalidTSDBRequest() = default;
+
+    /**
+     * @brief Получить описание ошибки.
+     *
+     * @return Строка с описанием ошибки.
+     */
+    virtual const char *what() const noexcept override;
+
+protected:
+    std::string message;
+};
+
+/**
  * @brief Описывает одну точку данных временного ряда.
  *
  * Содержит значение и временную метку, соответствующую этой точке.
@@ -44,6 +63,7 @@ public:
      * @param start Начало временного диапазона
      * @param end Конец временного диапазона
      * @return Массив метрик типа Metric
+     * @throws InvalidTSDBRequest В случае неуспешного статуса ответа от TSDB
      */
     virtual std::vector<Metric> query(const std::string &query_str, std::time_t start, std::time_t end) = 0;
 
@@ -52,7 +72,7 @@ public:
      *
      * @return true, если TSDB доступна, иначе false
      */
-    virtual bool isAvailable() = 0;
+    virtual bool isAvailable() noexcept = 0;
 
     /**
      * @brief Форматирует имя линии графика на основе метрики.
